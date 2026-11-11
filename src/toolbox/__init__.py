@@ -3,6 +3,11 @@ from .kolory import PodstawoweKolory
 from .punkty import Punkt, PUNKT_ROZBIEGAJACY, PUNKT_NIESKONCZONOSCI, punkt
 from .geometria import Orientacja, get_orientacja, Parametryka, Obiekt
 from .kontener import Kontener
+from .pliki import (
+    BladPliku, Dane, Przeciecie, Strona, Wielokat,
+    punkt_przeciecia, strona_punktu, oblicz_przeciecia,
+    z_tekstu, wczytaj, do_tekstu, zapisz,
+)
 
 __all__ = [
     "PodstawoweKolory",
@@ -15,5 +20,17 @@ __all__ = [
     "Parametryka",
     "Obiekt",
     "Kontener",
+    "BladPliku",
+    "Dane",
+    "Przeciecie",
+    "Strona",
+    "Wielokat",
+    "punkt_przeciecia",
+    "strona_punktu",
+    "oblicz_przeciecia",
+    "z_tekstu",
+    "wczytaj",
+    "do_tekstu",
+    "zapisz",
     "__version__",
 ]
