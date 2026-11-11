@@ -10,6 +10,8 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+# katalogi tworzone przez tmp_path w testach
+pytest-of-*/
 
 # Packaging
 *.egg-info/
