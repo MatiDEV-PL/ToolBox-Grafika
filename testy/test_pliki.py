@@ -35,8 +35,8 @@ PRZYKLAD = """
 3.0 0.0
 
 [side]
--1.0 0.0 1.0 0.0  1.0 -1.0 -1
--1.0 0.0 1.0 0.0  0.0 1.0 1
+-1.0 0.0 1.0 0.0  1.0 -1.0 1
+-1.0 0.0 1.0 0.0  0.0 1.0 -1
 -1.0 0.0 1.0 0.0  0.0 0.0 0
 """
 
@@ -52,7 +52,7 @@ def test_odczyt_przykladu():
     assert math.isnan(d.przeciecia[1].punkt.x)
     assert d.przeciecia[2].punkt.x == -math.inf and d.przeciecia[2].punkt.y == math.inf
     assert len(d.wielokaty[0].punkty) == 3 and d.wielokaty[0].kolor == 1
-    assert [s.strona for s in d.strony] == [-1, 1, 0]
+    assert [s.strona for s in d.strony] == [1, -1, 0]
 
 
 def test_zapis_i_odczyt_daje_to_samo(tmp_path):
@@ -91,6 +91,58 @@ def test_oblicz_przeciecia_liczy_wszystkie_pary():
     odc = [Obiekt.z_wspolrzednych(0, 0, 1, 1), Obiekt.z_wspolrzednych(0, 1, 1, 0),
            Obiekt.z_wspolrzednych(5, 5, 6, 6)]
     assert len(oblicz_przeciecia(odc)) == 3
+
+
+# --- Nakladanie odcinkow: linia z czescia wspolna -------------------------
+
+def test_nakladanie_dopisuje_czesc_wspolna(tmp_path):
+    """Po linii z -inf inf ma isc linia z czescia wspolna i nan nan."""
+    a = Obiekt.z_wspolrzednych(-1, 0, 1, 0, kolor=1)
+    b = Obiekt.z_wspolrzednych(0, 0, 2, 0, kolor=2)
+    d = Dane()
+    d.przeciecia = oblicz_przeciecia([a, b])
+
+    print(f"  punkt przeciecia -> ({d.przeciecia[0].punkt.x}, {d.przeciecia[0].punkt.y})")
+    assert d.przeciecia[0].punkt.jest_nieskonczony
+
+    czesc = d.przeciecia[0].wspolna
+    print(f"  czesc wspolna -> {czesc[0].wspolrzedne} .. {czesc[1].wspolrzedne}")
+    assert czesc[0].wspolrzedne == (0.0, 0.0)
+    assert czesc[1].wspolrzedne == (1.0, 0.0)
+
+    tekst = do_tekstu(d)
+    print(tekst)
+    linie = [ln for ln in tekst.splitlines() if ln.strip() and not ln.startswith(("#", "["))]
+    assert len(linie) == 2, "maja byc dwie linie: nakladanie i czesc wspolna"
+
+    pola_nakl = linie[0].split()
+    pola_czesci = linie[1].split()
+    assert pola_nakl[-2:] == ["-inf", "inf"]
+    assert pola_czesci[-2:] == ["nan", "nan"]
+    # 12 liczb, tak samo jak w zwyklej linii
+    assert len(pola_czesci) == 12
+    # czesc wspolna powtorzona w kolumnach obu odcinkow
+    assert pola_czesci[0:4] == pola_czesci[5:9]
+    # kolory zostaja te z oryginalnych odcinkow
+    assert pola_czesci[4] == "1" and pola_czesci[9] == "2"
+
+    # zapis i odczyt musi zachowac czesc wspolna
+    sciezka = tmp_path / "nakladanie.txt"
+    zapisz(sciezka, d)
+    d2 = wczytaj(sciezka)
+    assert d2.przeciecia[0].wspolna is not None
+    assert do_tekstu(d2) == do_tekstu(d)
+
+
+def test_dotkniecie_koncami_nie_daje_czesci_wspolnej():
+    """Styk w jednym punkcie to nie nakladanie, wiec bez dodatkowej linii."""
+    a = Obiekt.z_wspolrzednych(0, 0, 5, 0)
+    b = Obiekt.z_wspolrzednych(5, 0, 10, 0)
+    d = Dane()
+    d.przeciecia = oblicz_przeciecia([a, b])
+    print(f"  punkt -> {d.przeciecia[0].punkt.wspolrzedne}, wspolna -> {d.przeciecia[0].wspolna}")
+    assert d.przeciecia[0].punkt.wspolrzedne == (5.0, 0.0)
+    assert d.przeciecia[0].wspolna is None
 
 
 @pytest.mark.parametrize("zly", [

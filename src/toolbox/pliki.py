@@ -17,18 +17,26 @@ Punkt przecięcia w sekcji [intersections]:
     nan nan            -> brak przecięcia          (PUNKT_ROZBIEGAJACY)
     -inf inf           -> odcinki nachodzą na siebie (PUNKT_NIESKONCZONOSCI)
 
-Strona w sekcji [side]: 1 = punkt po lewej od odcinka p->q, -1 = po prawej,
+Gdy odcinki nachodzą na siebie (punkt -inf inf), zaraz po tej linii idzie
+dodatkowa linia z częścią wspólną w miejsce obu odcinków i nan nan na końcu:
+
+    odcinek1  kolor1  odcinek2  kolor2  nan nan
+
+gdzie oba "odcinki" to ta sama część wspólna, każdy w kolumnach swojego
+odcinka. Czyli razem 12 liczb, tak samo jak w zwykłej linii.
+
+Strona w sekcji [side]: -1 = punkt po lewej od odcinka p->q, 1 = po prawej,
 0 = współliniowo.
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from math import isinf, isnan
+from math import isinf, isnan, nan
 from pathlib import Path
 from typing import Callable, Hashable, Iterable, TypeVar, Union
 
-from .geometria import Obiekt, Orientacja
+from .geometria import EPS, Obiekt
 from .kontener import Kontener
 from .punkty import PUNKT_NIESKONCZONOSCI, PUNKT_ROZBIEGAJACY, Punkt
 
@@ -47,6 +55,9 @@ class Przeciecie:
     a: Obiekt
     b: Obiekt
     punkt: Punkt  # zwykły punkt, PUNKT_ROZBIEGAJACY (brak) albo PUNKT_NIESKONCZONOSCI (nakładanie)
+    # Gdy odcinki nachodzą na siebie, tu trafia część wspólna jako para końców.
+    # W pliku jest to dodatkowa linia zaraz po tej z -inf inf.
+    wspolna: tuple[Punkt, Punkt] | None = None
 
 
 @dataclass
@@ -84,7 +95,8 @@ def punkt_przeciecia(a: Obiekt, b: Obiekt) -> Punkt:
     p, r = a.jako_parametryka, b.jako_parametryka
     d = p.dx * r.dy - p.dy * r.dx
 
-    if d == 0:
+    # Zamiast d == 0 używamy tolerancji, bo float bywa niedokładny
+    if abs(d) <= EPS:
         # Odcinki leżą na jednej prostej. Wspólne punkty to te końce, które
         # leżą na drugim odcinku. Jeden taki punkt = dotknięcie końcami.
         kandydaci = {
@@ -102,10 +114,38 @@ def punkt_przeciecia(a: Obiekt, b: Obiekt) -> Punkt:
     return Punkt(x, y)
 
 
+def czesc_wspolna(a: Obiekt, b: Obiekt) -> tuple[Punkt, Punkt] | None:
+    """Wspólna część dwóch odcinków jako para końców (albo None).
+
+    Ma sens tylko dla odcinków nachodzących na siebie, czyli takich, które
+    leżą na jednej prostej i pokrywają się na pewnym odcinku. Dotknięcie
+    końcami daje jeden punkt, więc zwracamy None - to nie jest nakładanie.
+    """
+    if not a.tuli_z(b):
+        return None
+
+    p, r = a.jako_parametryka, b.jako_parametryka
+    if abs(p.dx * r.dy - p.dy * r.dx) > EPS:
+        return None  # nie są współliniowe
+
+    kandydaci: list[Punkt] = []
+    for q in (a.poczatek, a.koniec, b.poczatek, b.koniec):
+        na_drugim = b.na_odcinku(q) if q in (a.poczatek, a.koniec) else a.na_odcinku(q)
+        if na_drugim and q.wspolrzedne not in [k.wspolrzedne for k in kandydaci]:
+            kandydaci.append(q)
+
+    if len(kandydaci) < 2:
+        return None  # tylko dotknięcie końcami, nie nakładanie
+
+    kandydaci.sort(key=lambda q: (q.x, q.y))
+    return (kandydaci[0], kandydaci[-1])
+
+
 def strona_punktu(odcinek: Obiekt, punkt: Punkt) -> int:
-    """1 gdy punkt jest po lewej od odcinka, -1 po prawej, 0 gdy współliniowy."""
+    """-1 gdy punkt jest po lewej od odcinka, 1 po prawej, 0 gdy współliniowy."""
     o = odcinek.jako_parametryka.check_orientacja_punkt(punkt.x, punkt.y)
-    return {Orientacja.WSPOLLINIOWE: 0, Orientacja.PRZECIWNIE: 1, Orientacja.ZGODNIE: -1}[o]
+    # Orientacja ma już właściwe wartości (-1/0/1), więc tylko rzutujemy na int
+    return int(o)
 
 
 def oblicz_przeciecia(odcinki: Iterable[Obiekt]) -> list[Przeciecie]:
@@ -114,7 +154,11 @@ def oblicz_przeciecia(odcinki: Iterable[Obiekt]) -> list[Przeciecie]:
     wynik = []
     for i in range(len(lista)):
         for j in range(i + 1, len(lista)):
-            wynik.append(Przeciecie(lista[i], lista[j], punkt_przeciecia(lista[i], lista[j])))
+            a, b = lista[i], lista[j]
+            punkt = punkt_przeciecia(a, b)
+            # Przy nakładaniu dorzucamy jeszcze część wspólną
+            wspolna = czesc_wspolna(a, b) if punkt.jest_nieskonczony else None
+            wynik.append(Przeciecie(a, b, punkt, wspolna))
     return wynik
 
 
@@ -179,7 +223,15 @@ def z_tekstu(tekst: str) -> Dane:
         elif sekcja == "intersections":
             a = _odcinek_z_liczb(v[0:4], int(v[4]))
             b = _odcinek_z_liczb(v[5:9], int(v[9]))
-            dane.przeciecia.append(Przeciecie(a, b, Punkt(v[10], v[11])))
+            punkt = Punkt(v[10], v[11])
+            # Linia zaraz po nakładaniu (punkt -inf inf) i zakończona nan nan
+            # to linia z częścią wspólną, a nie kolejna para odcinków.
+            poprzednie = dane.przeciecia[-1] if dane.przeciecia else None
+            if (poprzednie is not None and poprzednie.punkt.jest_nieskonczony
+                    and poprzednie.wspolna is None and punkt.jest_nan):
+                poprzednie.wspolna = (a.poczatek, a.koniec)
+            else:
+                dane.przeciecia.append(Przeciecie(a, b, punkt))
         elif sekcja == "side":
             if v[6] not in (-1, 0, 1):
                 raise BladPliku(f"linia {nr}: strona musi być -1, 0 albo 1, jest {v[6]}")
@@ -241,6 +293,7 @@ def do_tekstu(dane: Dane) -> str:
         w.append("[intersections]")
         w.append("# odcinek 1 (px py qx qy c)  odcinek 2 (px py qx qy c)  punkt przecięcia (x y)")
         w.append("# nan nan = brak przecięcia, -inf inf = odcinki nachodzą na siebie")
+        w.append("# po nakładaniu dodatkowa linia: część wspólna w miejsce obu odcinków i nan nan")
         for pr in dane.przeciecia:
             a, b = pr.a, pr.b
             w.append(
@@ -248,6 +301,17 @@ def do_tekstu(dane: Dane) -> str:
                 + _wiersz_odcinka(b) + " " + str(int(b.kolor)).rjust(3) + "  "
                 + _wiersz(pr.punkt.x, pr.punkt.y)
             )
+            # Przy nakładaniu dopisujemy część wspólną w kolumnach obu odcinków
+            if pr.punkt.jest_nieskonczony:
+                czesc = pr.wspolna or czesc_wspolna(a, b)
+                if czesc is not None and czesc[0].wspolrzedne != czesc[1].wspolrzedne:
+                    pocz, kon = czesc
+                    wiersz_czesci = _wiersz_odcinka(Obiekt(pocz, kon))
+                    w.append(
+                        wiersz_czesci + " " + str(int(a.kolor)).rjust(3) + "  "
+                        + wiersz_czesci + " " + str(int(b.kolor)).rjust(3) + "  "
+                        + _wiersz(nan, nan)
+                    )
         w.append("")
 
     for wielokat in dane.wielokaty:
@@ -257,7 +321,7 @@ def do_tekstu(dane: Dane) -> str:
 
     if dane.strony:
         w.append("[side]")
-        w.append("# odcinek (px py qx qy)  punkt (x y)  strona: 1 lewa, -1 prawa, 0 współliniowo")
+        w.append("# odcinek (px py qx qy)  punkt (x y)  strona: -1 lewa, 1 prawa, 0 współliniowo")
         for s in dane.strony:
             w.append(_wiersz_odcinka(s.odcinek) + "  " + _wiersz(s.punkt.x, s.punkt.y)
                      + " " + str(s.strona).rjust(3))
@@ -273,6 +337,6 @@ def zapisz(sciezka: Union[str, Path], dane: Dane) -> None:
 
 __all__ = [
     "BladPliku", "Przeciecie", "Strona", "Wielokat", "Dane",
-    "punkt_przeciecia", "strona_punktu", "oblicz_przeciecia",
+    "punkt_przeciecia", "czesc_wspolna", "strona_punktu", "oblicz_przeciecia",
     "z_tekstu", "wczytaj", "do_tekstu", "zapisz",
 ]

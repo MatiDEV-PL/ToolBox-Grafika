@@ -3,21 +3,82 @@ from math import hypot, isfinite
 from .kolory import PodstawoweKolory
 from .punkty import Punkt, PUNKT_ROZBIEGAJACY, PUNKT_NIESKONCZONOSCI
 
+# Tolerancja dla porownan zmiennoprzecinkowych. Bez niej punkt, ktory
+# matematycznie lezy na prostej, wypada jako "po jednej ze stron".
+EPS = 1e-9
+
 class Orientacja(IntEnum):
-    """Trzy możliwe odpowiedzi gdy pytamy o orientację trzech punktów."""
+    """Po ktorej stronie odcinka lezy punkt.
+
+    Wartosci sa takie jak w tresci zadania: -1 lewa, 0 wspolliniowo, 1 prawa.
+    """
+    PRZECIWNIE = -1   # lewa strona
     WSPOLLINIOWE = 0
-    ZGODNIE = 1
-    PRZECIWNIE = 2
+    ZGODNIE = 1       # prawa strona
 
 def get_orientacja(x1: float, y1: float, x2: float, y2: float, x3: float, y3: float) -> Orientacja:
     """Sprawdza jak ułożone są trzy punkty, patrzymy na znak iloczynu wektorowego."""
     val = ((y2 - y1) * (x3 - x2)) - ((x2 - x1) * (y3 - y2))
 
-    if val == 0:
+    # Przy porownaniu do zera uzywamy tolerancji, bo float nie jest dokladny
+    if abs(val) <= EPS:
         return Orientacja.WSPOLLINIOWE
     elif val > 0:
         return Orientacja.ZGODNIE
     return Orientacja.PRZECIWNIE
+
+
+def _kierunek_zakretu(p1: Punkt, p2: Punkt, p3: Punkt) -> int:
+    """1 = zakret w lewo, -1 = w prawo, 0 = punkty wspolliniowe."""
+    # Orientacja podaje strone punktu, a tu pytamy o kierunek skretu,
+    # dlatego znak jest odwrotny.
+    return -int(get_orientacja(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y))
+
+
+def CCW(p1: Punkt, p2: Punkt, p3: Punkt) -> bool:
+    """Czy punkty p1, p2, p3 (w tej kolejnosci) tworza zakret w lewo.
+
+    Zwraca True dla zakretu w lewo, False dla zakretu w prawo i dla
+    punktow wspolliniowych. Jak potrzebny jest kierunek, a nie tylko
+    odpowiedz tak/nie, to jest funkcja zakret().
+    """
+    return _kierunek_zakretu(p1, p2, p3) > 0
+
+
+def zakret(p1: Punkt, p2: Punkt, p3: Punkt) -> int:
+    """Kierunek zakretu: 1 w lewo, -1 w prawo, 0 gdy punkty sa wspolliniowe."""
+    return _kierunek_zakretu(p1, p2, p3)
+
+
+# Kierunki sortowania leksykograficznego.
+# L = od lewej (x rosnaco), R = od prawej (x malejaco),
+# D = od dolu (y rosnaco),  U = od gory (y malejaco).
+_OSIE = {"L": ("x", 1), "R": ("x", -1), "D": ("y", 1), "U": ("y", -1)}
+
+_KIERUNKI_SORTLEX = ("LD", "LU", "RD", "RU", "DL", "DR", "UL", "UR")
+
+
+def SortLex(punkty, ord: str = "LD") -> list:
+    """Sortuje punkty leksykograficznie w kolejności podanej w ord.
+
+    ord to dwie litery: pierwsza wybiera oś i kierunek główny, druga
+    poboczny. Dostępne są LD, LU, RD, RU, DL, DR, UL, UR - np. LD to
+    "najpierw od lewej, potem od dołu".
+    """
+    kod = str(ord).upper()
+    if len(kod) != 2 or kod[0] not in _OSIE or kod[1] not in _OSIE:
+        dostepne = ", ".join(_KIERUNKI_SORTLEX)
+        raise ValueError(f"nieznany kierunek {ord!r}, dostepne: {dostepne}") from None
+
+    os1, znak1 = _OSIE[kod[0]]
+    os2, znak2 = _OSIE[kod[1]]
+    if os1 == os2:
+        raise ValueError(f"kierunek {ord!r} podaje dwie litery tej samej osi") from None
+
+    def klucz(p: Punkt):
+        return (getattr(p, os1) * znak1, getattr(p, os2) * znak2)
+
+    return sorted(punkty, key=klucz)
 
 class Parametryka:
     """Odcinek zapisany jako punkt startowy i wektor kierunkowy.
