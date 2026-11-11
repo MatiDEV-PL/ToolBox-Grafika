@@ -17,3 +17,7 @@ pytest-of-*/
 *.egg-info/
 dist/
 build/
+
+# Lockfile - biblioteka, nie aplikacja: nie przypinamy wersji zależności
+# (dla aplikacji uv.lock powinien być commitowany)
+uv.lock
