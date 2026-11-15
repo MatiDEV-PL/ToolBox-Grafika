@@ -76,7 +76,7 @@ def test_kolor_domyslny_i_nadany():
 # --- Konwencja stron: -1 lewa, 0 wspolliniowo, 1 prawa --------------------
 
 def test_wartosci_enuma_orientacji():
-    """Wartosci musza sie zgadzac z trescia: -1, 0, 1 (a nie 0, 1, 2)."""
+    """Wartosci maja byc -1, 0, 1 (a nie 0, 1, 2)."""
     print(f"  PRZECIWNIE={int(Orientacja.PRZECIWNIE)} WSPOLLINIOWE={int(Orientacja.WSPOLLINIOWE)} "
           f"ZGODNIE={int(Orientacja.ZGODNIE)}")
     assert int(Orientacja.PRZECIWNIE) == -1

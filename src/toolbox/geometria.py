@@ -10,7 +10,7 @@ EPS = 1e-9
 class Orientacja(IntEnum):
     """Po ktorej stronie odcinka lezy punkt.
 
-    Wartosci sa takie jak w tresci zadania: -1 lewa, 0 wspolliniowo, 1 prawa.
+    Wartosci sa takie: -1 lewa, 0 wspolliniowo, 1 prawa.
     """
     PRZECIWNIE = -1   # lewa strona
     WSPOLLINIOWE = 0

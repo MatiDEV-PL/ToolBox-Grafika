@@ -6,6 +6,7 @@ from toolbox import Obiekt, Punkt, PUNKT_NIESKONCZONOSCI, PUNKT_ROZBIEGAJACY
 from toolbox.pliki import (
     BladPliku, Dane, Wielokat, Strona, oblicz_przeciecia, punkt_przeciecia,
     strona_punktu, z_tekstu, do_tekstu, zapisz, wczytaj,
+    InfoDanych, WczytajDane, ZapiszDane, wypisz_info, wypisz_dane,
 )
 
 PRZYKLAD = """
@@ -156,3 +157,108 @@ def test_zly_plik_zglasza_blad(zly):
     with pytest.raises(BladPliku):
         z_tekstu(zly)
     print("  zly plik -> BladPliku zgloszony poprawnie")
+
+
+# --- InfoDanych / WczytajDane / ZapiszDane ---------------------------------
+
+def _zapisz_przyklad(tmp_path):
+    sciezka = tmp_path / "dane.txt"
+    sciezka.write_text(PRZYKLAD.lstrip("\n"), encoding="utf-8")
+    return sciezka
+
+
+def test_info_danych_listuje_sekcje_z_komentarzami(tmp_path):
+    sciezka = _zapisz_przyklad(tmp_path)
+    info = InfoDanych(sciezka)
+    nazwy = [n for n, _ in info]
+    print(f"  sekcje -> {nazwy}")
+    assert nazwy[:4] == ["info", "points 0", "points 2", "segments 1"]
+    # komentarz sekcji [points 0]
+    komentarz = dict(info)["points 0"]
+    assert komentarz == ["Zestaw nr 3"]
+    # [info] ma całą zawartość
+    assert dict(info)["info"] == ["Przykładowy plik z danymi"]
+
+
+def test_info_danych_zachowuje_duplikaty_i_kolejnosc(tmp_path):
+    """[info] może wystąpić kilka razy, więc wynik to lista, nie słownik."""
+    sciezka = tmp_path / "x.txt"
+    sciezka.write_text("[info]\n# pierwsze\n[points 0]\n0 0\n[info]\n# drugie\n", encoding="utf-8")
+    nazwy = [n for n, _ in InfoDanych(sciezka)]
+    print(f"  sekcje -> {nazwy}")
+    assert nazwy == ["info", "points 0", "info"]
+    assert len(InfoDanych(sciezka)) == 3
+
+
+def test_info_danych_obcina_puste_linie_na_koncu(tmp_path):
+    sciezka = tmp_path / "x.txt"
+    sciezka.write_text("[info]\n# linia\n#\n#\n[points 0]\n0 0\n", encoding="utf-8")
+    komentarz = InfoDanych(sciezka)[0][1]
+    print(f"  komentarze po obcieciu -> {komentarz}")
+    assert komentarz == ["linia"]
+
+
+def test_info_danych_zly_naglowek_zglasza_blad(tmp_path):
+    sciezka = tmp_path / "x.txt"
+    sciezka.write_text("[points 0\n0 0\n", encoding="utf-8")
+    with pytest.raises(BladPliku):
+        InfoDanych(sciezka)
+    print("  zly naglowek -> BladPliku")
+
+
+def test_wczytaj_dane_zwraca_to_samo_co_wczytaj(tmp_path):
+    sciezka = _zapisz_przyklad(tmp_path)
+    a = WczytajDane(sciezka)
+    b = wczytaj(sciezka)
+    print(f"  punkty={len(a.kontener.punkty())} odcinki={len(a.kontener.odcinki())}")
+    assert do_tekstu(a) == do_tekstu(b)
+
+
+def test_zapisz_dane_i_odczyt(tmp_path):
+    sciezka = _zapisz_przyklad(tmp_path)
+    dane = WczytajDane(sciezka)
+    cel = tmp_path / "kopia.txt"
+    ZapiszDane(cel, dane)
+    print(f"  zapisano {cel.name}, {cel.stat().st_size} B")
+    assert do_tekstu(WczytajDane(cel)) == do_tekstu(dane)
+
+
+def test_zapisz_dane_tylko_wybrane_sekcje(tmp_path):
+    """ZapiszDane ma zapisywać wybrane dane, nie zawsze wszystko."""
+    dane = Dane(info=["opis"])
+    dane.kontener.dodaj(Punkt(1, 1, 0))
+    dane.kontener.dodaj(Obiekt.z_wspolrzednych(0, 0, 5, 0, kolor=1))
+    dane.strony.append(Strona(Obiekt.z_wspolrzednych(0, 0, 1, 0), Punkt(0, 1), -1))
+
+    cel = tmp_path / "tylko_punkty.txt"
+    ZapiszDane(cel, dane, ["points"])
+    tekst = cel.read_text(encoding="utf-8")
+    print(tekst)
+    assert "[points 0]" in tekst
+    assert "[segments" not in tekst
+    assert "[side]" not in tekst
+    assert "[info]" not in tekst
+
+
+def test_zapisz_dane_nieznana_sekcja_zglasza_blad(tmp_path):
+    with pytest.raises(ValueError):
+        ZapiszDane(tmp_path / "x.txt", Dane(), ["bzdury"])
+    print("  nieznana sekcja -> ValueError")
+
+
+def test_wypisz_info_drukuje_sekcje(tmp_path, capsys):
+    sciezka = _zapisz_przyklad(tmp_path)
+    wypisz_info(sciezka)
+    wyjscie = capsys.readouterr().out
+    print(wyjscie)
+    assert "[points 0]" in wyjscie
+    assert "Zestaw nr 3" in wyjscie
+
+
+def test_wypisz_dane_drukuje_podsumowanie(tmp_path, capsys):
+    dane = WczytajDane(_zapisz_przyklad(tmp_path))
+    wypisz_dane(dane)
+    wyjscie = capsys.readouterr().out
+    print(wyjscie)
+    assert "punkty: 3" in wyjscie
+    assert "odcinki: 2" in wyjscie

@@ -335,8 +335,121 @@ def zapisz(sciezka: Union[str, Path], dane: Dane) -> None:
     Path(sciezka).write_text(do_tekstu(dane), encoding="utf-8")
 
 
+# --- Odczyt nazw sekcji i wygodne I/O ----------------------------------------
+
+def InfoDanych(sciezka: Union[str, Path]) -> list[tuple[str, list[str]]]:
+    """Zwraca nazwy sekcji z pliku razem z ich komentarzami.
+
+    Wynik to lista par (nazwa sekcji, lista komentarzy) w kolejności
+    występowania w pliku. Lista, a nie słownik, bo ta sama sekcja może
+    wystąpić kilka razy - np. [info], a potem znowu [info] na końcu.
+
+    Nazwa sekcji jest zachowana tak, jak w pliku, czyli razem z numerem
+    koloru (np. "points 0"). Komentarze są bez znaku # na początku,
+    a puste linie na końcu sekcji są obcinane.
+    """
+    tekst = Path(sciezka).read_text(encoding="utf-8")
+
+    sekcje: list[tuple[str, list[str]]] = []
+    for surowa in tekst.splitlines():
+        linia = surowa.strip()
+        if not linia:
+            continue
+        if linia.startswith("["):
+            if not _NAGLOWEK.match(linia):
+                raise BladPliku(f"zły nagłówek sekcji: {linia!r}")
+            sekcje.append((linia[1:-1].strip(), []))
+            continue
+        if linia.startswith("#") and sekcje:
+            sekcje[-1][1].append(linia[1:].strip())
+
+    # "bez końcowych pustych lini"
+    wynik = []
+    for nazwa, komentarze in sekcje:
+        while komentarze and not komentarze[-1]:
+            komentarze.pop()
+        wynik.append((nazwa, komentarze))
+    return wynik
+
+
+def WczytajDane(sciezka: Union[str, Path]) -> Dane:
+    """Wczytuje zawartość pliku do struktur danych.
+
+    To ta sama operacja co wczytaj(), tylko pod inną nazwą.
+    """
+    return wczytaj(sciezka)
+
+
+_SEKCJE_DO_ZAPISU = {"info", "points", "segments", "intersections", "polygon", "side"}
+
+
+def _wybierz_sekcje(dane: Dane, sekcje: Iterable[str]) -> Dane:
+    """Zwraca kopię danych zawierającą tylko wybrane sekcje."""
+    wybrane = {str(s).strip().lower() for s in sekcje}
+    nieznane = wybrane - _SEKCJE_DO_ZAPISU
+    if nieznane:
+        raise ValueError(
+            f"nieznane sekcje: {', '.join(sorted(nieznane))}; "
+            f"dostępne: {', '.join(sorted(_SEKCJE_DO_ZAPISU))}"
+        )
+
+    wynik = Dane()
+    if "info" in wybrane:
+        wynik.info = list(dane.info)
+    if "points" in wybrane:
+        for punkt in dane.kontener.punkty():
+            wynik.kontener.dodaj(punkt)
+    if "segments" in wybrane:
+        for odcinek in dane.kontener.odcinki():
+            wynik.kontener.dodaj(odcinek)
+    if "intersections" in wybrane:
+        wynik.przeciecia = list(dane.przeciecia)
+    if "polygon" in wybrane:
+        wynik.wielokaty = list(dane.wielokaty)
+    if "side" in wybrane:
+        wynik.strony = list(dane.strony)
+    return wynik
+
+
+def ZapiszDane(
+    sciezka: Union[str, Path],
+    dane: Dane,
+    sekcje: Iterable[str] | None = None,
+) -> None:
+    """Zapisuje wybrane dane do pliku.
+
+    Bez argumentu sekcje zapisuje wszystko. Z listą nazw sekcji zapisuje
+    tylko te, np. ZapiszDane("x.txt", dane, ["points", "segments"]).
+    """
+    if sekcje is not None:
+        dane = _wybierz_sekcje(dane, sekcje)
+    zapisz(sciezka, dane)
+
+
+def wypisz_info(sciezka: Union[str, Path]) -> None:
+    """Wypisuje na konsolę nazwy sekcji i ich komentarze."""
+    for nazwa, komentarze in InfoDanych(sciezka):
+        print(f"[{nazwa}]")
+        for linia in komentarze:
+            print(f"  {linia}")
+
+
+def wypisz_dane(dane: Dane) -> None:
+    """Wypisuje na konsolę krótkie podsumowanie wczytanych danych."""
+    print(f"punkty: {len(dane.kontener.punkty())}")
+    print(f"odcinki: {len(dane.kontener.odcinki())}")
+    print(f"przeciecia: {len(dane.przeciecia)}")
+    print(f"wielokaty: {len(dane.wielokaty)}")
+    print(f"strony: {len(dane.strony)}")
+    if dane.info:
+        print("info:")
+        for linia in dane.info:
+            print(f"  {linia}")
+
+
 __all__ = [
     "BladPliku", "Przeciecie", "Strona", "Wielokat", "Dane",
     "punkt_przeciecia", "czesc_wspolna", "strona_punktu", "oblicz_przeciecia",
     "z_tekstu", "wczytaj", "do_tekstu", "zapisz",
+    "InfoDanych", "WczytajDane", "ZapiszDane", "wypisz_info", "wypisz_dane",
 ]

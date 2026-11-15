@@ -9,6 +9,7 @@ from .pliki import (
     BladPliku, Dane, Przeciecie, Strona, Wielokat,
     punkt_przeciecia, czesc_wspolna, strona_punktu, oblicz_przeciecia,
     z_tekstu, wczytaj, do_tekstu, zapisz,
+    InfoDanych, WczytajDane, ZapiszDane, wypisz_info, wypisz_dane,
 )
 
 __all__ = [
@@ -39,5 +40,10 @@ __all__ = [
     "wczytaj",
     "do_tekstu",
     "zapisz",
+    "InfoDanych",
+    "WczytajDane",
+    "ZapiszDane",
+    "wypisz_info",
+    "wypisz_dane",
     "__version__",
 ]
