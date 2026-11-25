@@ -1,0 +1,150 @@
+{\rtf1\ansi\ansicpg1250\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue-Bold;\f1\fnil\fcharset0 HelveticaNeue;\f2\fnil\fcharset0 HelveticaNeue-Italic;
+\f3\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{hyphen\}}{\leveltext\leveltemplateid201\'01\uc0\u8259 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid401\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid5}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab560
+\pard\pardeftab560\pardirnatural\partightenfactor0
+
+\f0\b\fs40 \cf0 \AppleHighlight-1 \AppleHilightClrSch-5 #Algorytm - przeci\uc0\u281 cie odcink\'f3w \AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\slleading20\partightenfactor0
+
+\f1\b0\fs26 \cf0 \
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\b \cf0 \AppleHighlight-1 \AppleHilightClrSch-2 **Wstawiamy 2 odcinki:** 
+\f1\b0 \AppleHighlight0 \AppleHilightClrSch0 \
+a = Obiekt.z_wspolrzednych(), b = Obiekt.z...\
+Jest klasy obiekt, przechowuje punkt pocz\uc0\u261 tkowy, ko\u324 cowy i kolor.\
+A.poczatek.x, a.poczatek.y, a.koniec.x, a.koniec.y\
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+\cf0 a.jako_parametryka zmienia odcinek na posta\uc0\u263  parametryczna - punkt pocz\u261 tkowy i wektor kierunkowy:\
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+def jako_parametryka(self) -> Parametryka:\
+        """Zamiana na zapis z punktem i wektorem bo tak si\uc0\u281  \u322 atwiej liczy."""\
+        return Parametryka(\
+            self.poczatek.x,\
+            self.poczatek.y,\
+            self.koniec.x - self.poczatek.x,\
+            self.koniec.y - self.poczatek.y,\
+            kolor=self.kolor,\
+        )\
+\
+\
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\b \cf0 \AppleHighlight-1 \AppleHilightClrSch-2 **Get_orientacja()**
+\f1\b0 \AppleHighlight0 \AppleHilightClrSch0 \
+Sprawdza po\uc0\u322 o\u380 enie punktu wzgl\u281 dem odcinka\
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f2\i \cf0 \AppleHighlight-1 \AppleHilightClrSch-4 (geometria.py 19)
+\f1\i0 \AppleHighlight0 \AppleHilightClrSch0 \
+Wykorzystuje si\uc0\u281  wyznacznik zwi\u261 zany z iloczynem wektorowym. \
+-1 - po lewej\
+1 - po prawej\
+0 - wsp\'f3\uc0\u322 liniowy \
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\b \cf0 \AppleHighlight-1 \AppleHilightClrSch-2 **na_odcinku() **\
+
+\f1\b0 \AppleHighlight0 \AppleHilightClrSch0 Sprawdza czy punkt nale\uc0\u380 y do odcinka\
+(\AppleHighlight-1 \AppleHilightClrSch-4 geometria.py 119)\AppleHighlight0 \AppleHilightClrSch0 \
+Funkcja najpierw sprawdza wspolliniowosc, potem sprawdza, czy wsp\'f3\uc0\u322 rz\u281 dne punktu s\u261  pomi\u281 dzy ko\u324 cami odcinka (oddzielnie x i y)\
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\b \cf0 \AppleHighlight-1 \AppleHilightClrSch-2 **tuli_z()**
+\f1\b0 \AppleHighlight0 \AppleHilightClrSch0 \
+Sprawdza czy odcinki si\uc0\u281  przecinaj\u261  \AppleHighlight-1 \AppleHilightClrSch-4 (geometria.py 129)\AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls1\ilvl0
+\f3\fs18 \cf0 {\listtext	\uc0\u8226 	}
+\f1\fs26 Sprawdza czy wsp\'f3\uc0\u322 rz\u281 dne s\u261  poprawne (bez punkt specjalny - nan, inf) \AppleHighlight-1 \AppleHilightClrSch-4 137\AppleHighlight0 \AppleHilightClrSch0 \
+\ls1\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Sprawdza po\uc0\u322 o\u380 enie ko\u324 c\'f3w wzgl\u281 dem drugiego odcinka (wszystkich punkt\'f3w) \AppleHighlight-1 \AppleHilightClrSch-4 140\AppleHighlight0 \AppleHilightClrSch0 \
+\ls1\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Sprawdza przeci\uc0\u281 cie (rzeka, droga to co by\u322 o) \AppleHighlight-1 \AppleHilightClrSch-4 147\AppleHighlight0 \AppleHilightClrSch0 \
+\ls1\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Jak ko\uc0\u324 ce albo odcinki si\u281  pokrywaj\u261  \AppleHighlight-1 \AppleHilightClrSch-4 151\AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\b \cf0 \AppleHighlight-1 \AppleHilightClrSch-2 **punkt_przeciecia()**
+\f1\b0 \AppleHighlight0 \AppleHilightClrSch0  \
+Oblicza wsp\'f3\uc0\u322 rz\u281 dne punktu przeci\u281 cia \AppleHighlight-1 \AppleHilightClrSch-4 (pliki.py 90)\AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls2\ilvl0
+\f3\fs18 \cf0 {\listtext	\uc0\u8226 	}
+\f1\fs26 Je\uc0\u347 li si\u281  nie przecinaj\u261  to punkt rozbiegaj\u261 cy (na\u324 , na\u324 ) \AppleHighlight-1 \AppleHilightClrSch-4 92\AppleHighlight0 \AppleHilightClrSch0 \
+\ls2\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Zamienia odcinki na posta\uc0\u263  parametryczna (punkt pacz. I wektor) \AppleHighlight-1 \AppleHilightClrSch-4 95\AppleHighlight0 \AppleHilightClrSch0 \
+\ls2\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Oblicza wyznacznik \AppleHighlight-1 \AppleHilightClrSch-4 112 \AppleHighlight0 \AppleHilightClrSch0 je\uc0\u347 li wyznacznik =/=0 to nie s\u261  rownolegle, je\u347 li tak to s\u261  rownolegle lub wsp\'f3\u322 liniowe \
+\ls2\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Je\uc0\u347 li s\u261  wsp\'f3\u322 liniowe to szukamy ko\u324 c\'f3w odcink\'f3w, kt\'f3re le\u380 \u261  na drugim odcinku\
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls3\ilvl0
+\fs24 \cf0 {\listtext	\uc0\u8259 	}
+\fs26 Je\uc0\u347 li znale\u378 li\u347 my dok\u322 adnie jeden punkt \AppleHighlight-1 \AppleHilightClrSch-4 107,\AppleHighlight0 \AppleHilightClrSch0  to zwracamy ten punkt\
+\ls3\ilvl0
+\fs24 {\listtext	\uc0\u8259 	}
+\fs26 Je\uc0\u347 li jest wi\u281 cej punkt\'f3w \AppleHighlight-1 \AppleHilightClrSch-4 110 \AppleHighlight0 \AppleHilightClrSch0 zwraca -inf; inf\
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls4\ilvl0
+\f3\fs18 \cf0 {\listtext	\uc0\u8226 	}
+\f1\fs26 Je\uc0\u347 li wyznacznik jest r\'f3wny 0 lub blisko 0 (\AppleHighlight-1 \AppleHilightClrSch-4 99)\AppleHighlight0 \AppleHilightClrSch0 , to obliczamy t - uk\uc0\u322 ad r\'f3wna\u324  na przeci\u281 cie dw\'f3ch prostych\AppleHighlight-1 \AppleHilightClrSch-4  112. \AppleHighlight0 \AppleHilightClrSch0 \
+\ls4\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 get_punkt(t) oblicza wsp\'f3\uc0\u322 rz\u281 dne \AppleHighlight-1 \AppleHilightClrSch-4 (geometria.py 107)\AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\b \cf0 \AppleHighlight-1 \AppleHilightClrSch-2 **czesc_wspolna()** \
+
+\f1\b0 \AppleHighlight0 \AppleHilightClrSch0 Zwraca nam cz\uc0\u281 \u347 \u263  wsp\'f3lna pokrywaj\u261 cych si\u281  odcink\'f3w \AppleHighlight-1 \AppleHilightClrSch-4 (pliki.py 117)\AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls5\ilvl0
+\f3\fs18 \cf0 {\listtext	\uc0\u8226 	}
+\f1\fs26 Sprawdza czy jest punkt przeci\uc0\u281 cia z tuli_z() \AppleHighlight-1 \AppleHilightClrSch-4 124\AppleHighlight0 \AppleHilightClrSch0 \
+\ls5\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Parametryzuje odcinki \AppleHighlight-1 \AppleHilightClrSch-4 127\AppleHighlight0 \AppleHilightClrSch0 \
+\ls5\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Sprawdza czy odcinki s\uc0\u261  wsp\'f3\u322 liniowe (poprzez wyznacznik wektorowy) \AppleHighlight-1 \AppleHilightClrSch-4 128\AppleHighlight0 \AppleHilightClrSch0 \
+\ls5\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Szuka ko\uc0\u324 c\'f3w, kt\'f3re le\u380 \u261  na drugim odcinku \AppleHighlight-1 \AppleHilightClrSch-4 132\AppleHighlight0 \AppleHilightClrSch0 \
+\ls5\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Je\uc0\u380 eli znajduje mniej ni\u380  2 punkty, to odcinki si\u281  nie nak\u322 adaj\u261 , mog\u261  si\u281  dotyka\u263  jednym ko\u324 cem \AppleHighlight-1 \AppleHilightClrSch-4 137\AppleHighlight0 \AppleHilightClrSch0 \
+\ls5\ilvl0
+\f3\fs18 {\listtext	\uc0\u8226 	}
+\f1\fs26 Porz\uc0\u261 dkuje punkty i zwraca ko\u324 cowe \AppleHighlight-1 \AppleHilightClrSch-4 140\AppleHighlight0 \AppleHilightClrSch0 \
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 \
+\
+\
+}
