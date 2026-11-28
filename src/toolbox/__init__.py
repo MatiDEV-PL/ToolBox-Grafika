@@ -5,6 +5,7 @@ from .geometria import (
     Orientacja, get_orientacja, CCW, zakret, SortLex, EPS, Parametryka, Obiekt,
 )
 from .kontener import Kontener
+from .otoczka import otoczka_naiwna, otoczka_przyrostowa, otoczka_graham
 from .pliki import (
     BladPliku, Dane, Przeciecie, Strona, Wielokat,
     punkt_przeciecia, czesc_wspolna, strona_punktu, oblicz_przeciecia,
@@ -27,6 +28,9 @@ __all__ = [
     "Parametryka",
     "Obiekt",
     "Kontener",
+    "otoczka_naiwna",
+    "otoczka_przyrostowa",
+    "otoczka_graham",
     "BladPliku",
     "Dane",
     "Przeciecie",
